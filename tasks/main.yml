@@ -32,8 +32,8 @@
 - name: Validate EOS SCP configuration
   assert:
     that:
-      - "'aaa authorization exec default local' in ansible_net_config"
-    msg: "'aaa authorization exec default local' is not configured on the switch and is required for SCP to work on EOS"
+      - "'aaa authorization exec default' in ansible_net_config"
+    msg: "'aaa authorization exec default' is not configured on the switch and is required for SCP to work on EOS"
 
 - name: Authenticate to AGNI and generate API cookies
   ansible.builtin.uri:
