@@ -6,12 +6,13 @@
 
 General steps done by this role to build the SSL profile:
 
-1. Pull the AGNI RadSec CA Certificate 
-2. Generate a private key and CSR on EOS
-3. Send the CSR to AGNI and get a signed client certificate
-4. Copy both certificates to EOS
-5. Configure the SSL profile using the previous certificates/key
-6. Validate the SSL profile
+1. Add switch to Devices in AGNI
+2. Pull the AGNI RadSec CA Certificate 
+3. Generate a private key and CSR on EOS
+4. Send the CSR to AGNI and get a signed client certificate
+5. Copy both certificates to EOS
+6. Configure the SSL profile using the previous certificates/key
+7. Validate the SSL profile
 
 ## Roadmap
 
