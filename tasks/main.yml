@@ -88,34 +88,19 @@
     body:
       orgID: "{{ lookup('env', 'AGNI_ORG_ID') }}"
     return_content: true
-  register: nad_response
-  until: nad_response.status == 200
+  register: nad_list_response
+  until: nad_list_response.status == 200
   retries: 10
   delay: 2
   delegate_to: localhost
   run_once: true
-#
-#- name: Delete NAD from AGNI
-#  ansible.builtin.uri:
-#    url: "{{ agni_base_url }}/api/config.nad.delete"
-#    method: POST
-#    headers:
-#      Accept: application/json
-#      Cookie: "{{ auth_cookie }}"
-#    body_format: json
-#    body:
-#      orgID: "{{ lookup('env', 'AGNI_ORG_ID') }}"
-#      #mac: show_version.stdout[0].systemMacAddress| replace(':', '')
-#      name: "{{ inventory_hostname }}"
-#    return_content: true
-#  register: nad_response
-#  until: nad_response.status == 200
-#  retries: 10
-#  delay: 2
-#
-- debug:
-    var: nad_response
 
+- name: Validate the NAD was created or exists
+  assert:
+    that:
+      - nad_list_response.json.data.nads | selectattr('name', 'equalto', inventory_hostname) | list | length > 0
+    fail_msg: "Switch is not defined in AGNI: {{ inventory_hostname }}"
+    success_msg: "Switch exists in AGNI"
 
 - name: Retrieve AGNI RadSec CA Certificate
   ansible.builtin.uri:
