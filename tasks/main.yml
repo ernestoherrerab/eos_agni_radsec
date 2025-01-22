@@ -32,8 +32,8 @@
 - name: Validate EOS SCP configuration
   assert:
     that:
-      - "'aaa authorization exec default' in ansible_net_config"
-    msg: "'aaa authorization exec default' is not configured on the switch and is required for SCP to work on EOS"
+      - "'aaa authorization exec default local' in ansible_net_config"
+    msg: "'aaa authorization exec default local' is not configured on the switch and is required for SCP to work on EOS"
 
 - name: Authenticate to AGNI and generate API cookies
   ansible.builtin.uri:
@@ -54,6 +54,68 @@
     auth_cookie: "{{ auth_response.cookies | dict2items | map(attribute='key') | zip(auth_response.cookies | dict2items | map(attribute='value')) | map('join', '=') | join(',') }}"
   delegate_to: localhost
   run_once: true
+  
+
+- name: Add NAD to AGNI
+  ansible.builtin.uri:
+    url: "{{ agni_base_url }}/api/config.nad.add"
+    method: POST
+    headers:
+      Accept: application/json
+      Cookie: "{{ auth_cookie }}"
+    body_format: json
+    body:
+      orgID: "{{ lookup('env', 'AGNI_ORG_ID') }}"
+      vendor: "arista-switch"
+      serialNumber: "{{ show_version.stdout[0].serialNumber }}"
+      mac: "{{ show_version.stdout[0].systemMacAddress }}"
+      ipAddress: "{{ ansible_host }}"
+      name: "{{ inventory_hostname }}"
+    return_content: true
+  register: nad_response
+  until: nad_response.status == 200
+  retries: 10
+  delay: 2
+
+- name: List NAD in AGNI
+  ansible.builtin.uri:
+    url: "{{ agni_base_url }}/api/config.nad.list"
+    method: POST
+    headers:
+      Accept: application/json
+      Cookie: "{{ auth_cookie }}"
+    body_format: json
+    body:
+      orgID: "{{ lookup('env', 'AGNI_ORG_ID') }}"
+    return_content: true
+  register: nad_response
+  until: nad_response.status == 200
+  retries: 10
+  delay: 2
+  delegate_to: localhost
+  run_once: true
+#
+#- name: Delete NAD from AGNI
+#  ansible.builtin.uri:
+#    url: "{{ agni_base_url }}/api/config.nad.delete"
+#    method: POST
+#    headers:
+#      Accept: application/json
+#      Cookie: "{{ auth_cookie }}"
+#    body_format: json
+#    body:
+#      orgID: "{{ lookup('env', 'AGNI_ORG_ID') }}"
+#      #mac: show_version.stdout[0].systemMacAddress| replace(':', '')
+#      name: "{{ inventory_hostname }}"
+#    return_content: true
+#  register: nad_response
+#  until: nad_response.status == 200
+#  retries: 10
+#  delay: 2
+#
+- debug:
+    var: nad_response
+
 
 - name: Retrieve AGNI RadSec CA Certificate
   ansible.builtin.uri:
